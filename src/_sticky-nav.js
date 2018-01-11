@@ -10,11 +10,15 @@ var StickyNav = function (options) {
     options = {};
   }
 
-  this.target = options.target;
+  this.targetEl = options.targetEl;
   this.offset = options.offset;
   this.throttle = options.throttle;
+  this.ACTIVE_CLASS = options.activeClass;
 
-  if (document.querySelector(this.target)) {
+  this.el  = document.querySelector(options.targetEl);
+  this.position = this.el.offsetTop;
+
+  if (document.querySelector(this.targetEl)) {
     this.init();
   }
 };
@@ -26,6 +30,7 @@ StickyNav.prototype = {
    */
   init: function() {
     this.bindEvents();
+
   },
   /**
    * Bind events
@@ -33,44 +38,41 @@ StickyNav.prototype = {
    * @see js/components/_utils for throttle utility
    */
   bindEvents: function () {
-    var el = document.querySelector(this.target);
 
     window.addEventListener('load', function () {
-      var elHeight = this.getHeight(el);
-      this.addHeight(el, elHeight);
+      var elHeight = this.getHeight(this.el);
+      this.addHeight(this.el, elHeight);
+
     }.bind(this), false);
 
     window.addEventListener('scroll', Util.throttle(function() {
-      this.sticker(el);
+      this.sticker(this.el);
     }.bind(this), this.throttle), false);
   },
 
-  /**
-   * Scroll Position detector
-   */
-  scrollPos: function () {
-    if (window.pageYOffset !== undefined) {
-        return pageYOffset;
-    } else {
-      var root = document.documentElement,
-          body = document.body,
-          scrollY;
-
-      scrollY = root.scrollTop || body.scrollTop || 0;
-      return scrollY;
-    }
-  },
 
   /**
    * Apply/remove is-sticky
    */
   sticker: function (el) {
-    if (this.scrollPos() > this.offset) {
-        el.classList.add('is-sticky');
+
+    var isStuck = this.setSticky();
+
+    if (isStuck) {
+      el.classList.add(this.ACTIVE_CLASS);
     } else {
-        el.classList.remove('is-sticky');
+      el.classList.remove(this.ACTIVE_CLASS);
     }
   },
+
+  /**
+   * Set Sticky Position
+   */
+  setSticky: function() {
+   return this.position <= window.scrollY + this.offset;
+  },
+
+
   /**
    * Get El's height
    */
@@ -79,7 +81,7 @@ StickyNav.prototype = {
   },
 
   /**
-   * Apply height to El
+   * Helper to Apply height to El
    */
   addHeight: function(el, elHeight) {
     el.parentNode.style.height = elHeight + 'px';
@@ -90,7 +92,8 @@ StickyNav.prototype = {
  * Let's Do this
  */
 new StickyNav({
-   target: '.js-sticky',
-   offset: 235,
+   targetEl: '.js-sticky-nav',
+   activeClass: 'is-sticky',
+   offset: 105,
    throttle: 20,
 });
